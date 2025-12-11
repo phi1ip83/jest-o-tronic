@@ -18,7 +18,7 @@ env:
 
 jobs:
   lint:
-    # Give your job a name that will show up in the GitHub Actions web UI
+    # es lint to check code and formatting
     name: ESLint
     # We'll run this on a Linux (Ubuntu) VM, since we'll deploy on Linux too.
     runs-on: ubuntu-latest
