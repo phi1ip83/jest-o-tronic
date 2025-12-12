@@ -1,35 +1,67 @@
 //use a proper .env file
 require('dotenv').config();
-// The Client and Intents are destructured from discord.js, since it exports an object by default. Read up on destructuring here https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
-const { Client, IntentsBitField } = require('discord.js');
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require('discord.js');
 
 const logger = require('./logger');
 
-const prefix = process.env.PREFIX || '!';
-const client = new Client({
-  intents: [
-    IntentsBitField.Flags.GuildMessages,
-    IntentsBitField.Flags.GuildMessages,
-    IntentsBitField.Flags.Guilds,
-    IntentsBitField.Flags.MessageContent,
-  ],
-});
+//const prefix = process.env.PREFIX || '!';
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.on('clientReady', () => {
   logger.info('I am ready! ');
 });
 
-client.on('messageCreate', (message) => {
-  if (!message.content.startsWith(prefix) || message.author.bot) return;
+client.commands = new Collection();
 
-  if (message.content === `${prefix}help`) {
-    logger.info('Help command invoked by: ' + message.author.username);
-    message.channel.send(`Available commands: ${prefix}ping, ${prefix}help`);
+//setup commands based on folders. commands contains subfolders for different categories, those categories contain js files for each command.
+const foldersPath = path.join(__dirname, 'commands');
+const commandFolders = fs.readdirSync(foldersPath);
+
+for (const folder of commandFolders) {
+  const commandsPath = path.join(foldersPath, folder);
+  const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'));
+  for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = require(filePath);
+    // Set a new item in the Collection with the key as the command name and the value as the exported module
+    if ('data' in command && 'execute' in command) {
+      client.commands.set(command.data.name, command);
+    } else {
+      logger.warn(
+        `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
+      );
+    }
+  }
+}
+
+//interaction handling
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+  const command = interaction.client.commands.get(interaction.commandName);
+
+  if (!command) {
+    console.error(`No command matching ${interaction.commandName} was found.`);
+    return;
   }
 
-  if (message.content.startsWith(`${prefix}ping`)) {
-    logger.info('Ping command invoked by: ' + message.author.username);
-    message.channel.send('pong!');
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    logger.error(error);
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        content: 'There was an error while executing this command!',
+        flags: MessageFlags.Ephemeral,
+      });
+    } else {
+      await interaction.reply({
+        content: 'There was an error while executing this command!',
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 });
 
