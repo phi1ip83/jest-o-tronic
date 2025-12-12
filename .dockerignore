@@ -1,0 +1,9 @@
+.github/
+.vscode/
+coverage/
+node_modules/
+.env
+eslint.config.mjs
+.git/
+.gitignore
+.prettier*
