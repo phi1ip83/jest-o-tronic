@@ -8,12 +8,14 @@
   "main": "./src",
   "scripts": {
     "lint": "eslint \"./src/**/*.js\"",
-    "start": "node ./src/index.js"
+    "start": "node --env-file=.env ./src/index.js",
+    "deploy": "node --env-file=.env ./src/deploy-commands.js",
+    "delete": "node --env-file=.env ./src/delete-commands.js"
   },
   "dependencies": {
-    "discord.js": "^14.25.1",
+    "discord.js": "^14.26.4",
     "dotenv": "^17.2.3",
-    "hadolint": "^0.4.1",
+    "hadolint": "^0.4.2",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.3"
   },
