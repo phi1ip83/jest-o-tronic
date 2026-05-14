@@ -8,10 +8,7 @@
   "main": "./src",
   "scripts": {
     "lint": "eslint \"./src/**/*.js\"",
-    "start": "node ./src/index.js",
-    "update-commands": "node ./src/deploy-commands.js",
-    "update-dev": "node ./src/deploy-dev-commands.js",
-    "delete-commands": "node ./src/delete-commands.js"
+    "start": "node ./src/index.js"
   },
   "dependencies": {
     "discord.js": "^14.25.1",
